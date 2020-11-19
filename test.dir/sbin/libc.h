@@ -24,6 +24,4 @@ extern int printf(const char* fmt, ...);
 
 extern void cp(int from, int to);
 
-extern int atoi(const char* str);
-
 #endif

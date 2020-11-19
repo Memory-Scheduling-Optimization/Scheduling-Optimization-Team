@@ -1,4 +1,4 @@
-UTILS = init bs recurse file symlink memory
+UTILS = init shell
 
 CFLAGS = -std=c99 -m32 -nostdlib -g -O2 -Wall -Werror
 
@@ -24,8 +24,6 @@ $(UTILS) : % : Makefile %.o $(OFILES)
 clean ::
 	rm -f *.o
 	rm -f *.d
-
-noexec ::
-	rm -f $(UTILS)
+	#rm -f $(UTILS)
 
 -include *.d

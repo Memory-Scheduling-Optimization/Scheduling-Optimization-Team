@@ -24,34 +24,18 @@ void cp(int from, int to) {
         ssize_t n = read(from,buf,100);
         if (n == 0) break;
         if (n < 0) {
-            printf("%s:%d read error\n",__FILE__,__LINE__);
+            printf("*** %s:%d read error, fd = %d\n",__FILE__,__LINE__,from);
             break;
         }
         char *ptr = buf;
         while (n > 0) {
             ssize_t m = write(to,ptr,n);
             if (m < 0) {
-                printf("%s:%d write error\n",__FILE__,__LINE__);
+                printf("*** %s:%d write error, fd = %d\n",__FILE__,__LINE__,to);
                 break;
             }
             n -= m;
             ptr += m;
         }
     }
-}
-
-int atoi(const char* str) {
-    int neg = 0;
-    int i = 0;
-    if (str[i] == '-') {
-	neg = 1;
-	i++;
-    }
-    int val = 0;
-    while (str[i] != '\0') {
-	int digit = str[i++] - '0';
-	val *= 10;
-	val += digit;
-    }
-    return val * (neg ? -1 : 1);
 }
