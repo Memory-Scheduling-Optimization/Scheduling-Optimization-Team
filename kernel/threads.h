@@ -8,6 +8,7 @@
 #include "smp.h"
 #include "shared.h"
 #include "new.h"
+#include "scheduler.h"
 
 #include "tss.h"
 #include "pcb.h"
@@ -64,7 +65,8 @@ namespace gheith {
     extern TCB** idleThreads;
 
     extern TCB* current();
-    extern Queue<TCB,InterruptSafeLock> readyQ;
+    //extern Queue<TCB,InterruptSafeLock> readyQ;
+    extern Scheduler<TCB> scheduler;
     extern void entry();
     extern void schedule(TCB*);
     extern void delete_zombies();
@@ -101,8 +103,10 @@ namespace gheith {
         });
         
     again:
-        readyQ.monitor_add();
-        auto next_tcb = readyQ.remove();
+        //readyQ.monitor_add();
+	scheduler.monitor_add();
+        //auto next_tcb = readyQ.remove();
+	auto next_tcb = scheduler.getNext();
         if (next_tcb == nullptr) {
             if (blockOption == BlockOption::CanReturn) {
 		me->saveArea.no_preempt = 0;
