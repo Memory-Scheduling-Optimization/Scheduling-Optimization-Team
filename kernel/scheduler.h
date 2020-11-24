@@ -26,7 +26,6 @@ struct Scheduler{
     virtual bool schedule(gheith::TCB* thread, Source source) = 0;
 
     virtual gheith::TCB* getNext() = 0;
-    
 };
 
 #endif
