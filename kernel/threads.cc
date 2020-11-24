@@ -14,8 +14,10 @@ namespace gheith {
     TCB** activeThreads;
     TCB** idleThreads;
 
-    Queue<TCB,InterruptSafeLock> readyQ{};
+    //Queue<TCB,InterruptSafeLock> readyQ{};
     Queue<TCB,InterruptSafeLock> zombies{};
+
+    Scheduler<TCB> scheduler{};
 
     TCB* current() {
         auto was = Interrupts::disable();
@@ -40,7 +42,8 @@ namespace gheith {
 
     void schedule(TCB* tcb) {
         if (!tcb->isIdle) {
-            readyQ.add(tcb);
+            //readyQ.add(tcb);
+	    scheduler.schedule(tcb, 0);
         }
     }
 
