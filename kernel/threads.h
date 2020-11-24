@@ -65,12 +65,10 @@ namespace gheith {
         });
         
     again:
-	    scheduler->monitor_add();
 	    auto next_tcb = scheduler->getNext();
         if (next_tcb == nullptr) {
             if (blockOption == BlockOption::CanReturn) {
                 me->saveArea.no_preempt = before;
-                asm volatile ("pause");
                 return;
             }
             if (me->isIdle) {
@@ -79,10 +77,10 @@ namespace gheith {
                 ASSERT(!Interrupts::isDisabled());
                 ASSERT(me == idleThreads[core_id]);
                 ASSERT(me == activeThreads[core_id]);
-                iAmStuckInALoop(true);
+                iAmStuckInALoop(false);
                 goto again;
             }
-            next_tcb = idleThreads[core_id];    
+            next_tcb = idleThreads[core_id];
         }
 
         next_tcb->saveArea.no_preempt = true;
@@ -96,7 +94,9 @@ namespace gheith {
         }
 	    tss[core_id].esp0 = next_tcb->pcb->esp0;
 
-        gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void *)caller<F>,(void*)&f);
+        gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void*)caller<F>,(void*)&f);
+
+        me->saveArea.no_preempt = before;
     }
 
     struct TCBWithStack : public TCB {
