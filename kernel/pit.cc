@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "smp.h"
 #include "threads.h"
+#include "scheduler.h"
 
 /*
  * The old PIT runs at a fixed frequency of 1193182Hz but doesn't support
@@ -144,5 +145,5 @@ extern "C" void apitHandler(uint32_t* things) {
     SMP::eoi_reg.set(0);
     auto me = gheith::activeThreads[id];
     if ((me == nullptr) || (me->isIdle) || (me->saveArea.no_preempt)) return;
-    yield();
+    gheith::yield(Source::PREEMPT);
 }
