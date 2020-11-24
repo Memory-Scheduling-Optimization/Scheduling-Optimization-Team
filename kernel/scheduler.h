@@ -26,12 +26,6 @@ struct Scheduler{
     virtual bool schedule(gheith::TCB* thread, Source source) = 0;
 
     virtual gheith::TCB* getNext() = 0;
-    
-    // Can we always implement monitor? Seems difficult for a multilevel queue
-
-    virtual void monitor_add() = 0;
-
-    virtual void monitor_remove() = 0;
 };
 
 #endif

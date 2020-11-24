@@ -117,7 +117,7 @@ void stop() {
     while(true) {
         block(BlockOption::MustBlock,[](TCB* me) {
             if (!me->isIdle) {
-		reaper.put(me);
+		        reaper.put(me);
             }
         });
         ASSERT(current()->isIdle);
