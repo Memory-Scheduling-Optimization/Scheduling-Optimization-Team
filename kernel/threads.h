@@ -112,7 +112,7 @@ namespace gheith {
         TCBWithStack(Shared<PCB> pcb) : TCB(pcb, false) {
             stack[STACK_WORDS - 2] = 0x200;  // EFLAGS: IF
                 stack[STACK_WORDS - 1] = (uint32_t) entry;
-                saveArea.no_preempt = 0;
+                saveArea.no_preempt = false;
                 saveArea.esp = (uint32_t) &stack[STACK_WORDS-2];
             pcb->esp0 = saveArea.esp;
         }
@@ -137,6 +137,7 @@ namespace gheith {
         ~TCBImpl() {}
 
         void doYourThing() override {
+            saveArea.no_preempt = false;
             work();
         }
     };
