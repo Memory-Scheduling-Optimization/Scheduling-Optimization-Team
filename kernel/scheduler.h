@@ -6,37 +6,32 @@
 #include "smp.h"
 #include "shared.h"
 #include "debug.h"
+#include "tcb.h"
 
-template <typename T>
-class Scheduler{
+enum class Source {
+    PREEMPT,
+    MANUAL
+};
 
-    Queue<T,InterruptSafeLock> readyQ{};
+struct Scheduler{
 
-public:
-    Scheduler() {}
+    Scheduler() {
 
-    bool schedule(T* thread, int source) {
-
-	readyQ.add(thread);
-	
-	return 1;
     }
 
-    T* getNext(){
+    virtual ~Scheduler() {
 
-	return readyQ.remove();
     }
 
-    //Used by geith to circumvent some concurrency issues
-    //I think
+    virtual bool schedule(gheith::TCB* thread, Source source) = 0;
+
+    virtual gheith::TCB* getNext() = 0;
     
-    void monitor_add(){
-	readyQ.monitor_add();
-    }
+    // Can we always implement monitor? Seems difficult for a multilevel queue
 
-    void monitor_remove(){
-	readyQ.monitor_remove();
-    }
+    virtual void monitor_add() = 0;
+
+    virtual void monitor_remove() = 0;
 };
 
 #endif
