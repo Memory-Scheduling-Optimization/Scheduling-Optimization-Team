@@ -10,7 +10,8 @@
 
 enum class Source {
     PREEMPT,
-    MANUAL
+    MANUAL,
+    INIT
 };
 
 struct Scheduler{
