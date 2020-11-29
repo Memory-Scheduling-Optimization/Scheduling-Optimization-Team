@@ -150,7 +150,7 @@ void thread(T work, Shared<PCB> pcb=kProc) {
     delete_zombies();
 
     auto tcb = new TCBImpl<T>(pcb, work);
-    schedule(tcb);
+    schedule(tcb,Source::INIT);
 }
 
 
