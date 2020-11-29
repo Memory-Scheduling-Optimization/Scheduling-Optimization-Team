@@ -9,6 +9,7 @@
 #include "tcb.h"
 
 enum class Source {
+    INIT,
     PREEMPT,
     MANUAL
 };

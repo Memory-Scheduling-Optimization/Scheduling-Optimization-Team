@@ -8,7 +8,10 @@ class FSFS : public Scheduler {
     Queue<gheith::TCB,InterruptSafeLock> readyQ{};
 
 public:
+
     FSFS() {}
+
+    ~FSFS() {}
 
     bool schedule(gheith::TCB* thread, Source source) {
 	    readyQ.add(thread);

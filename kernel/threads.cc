@@ -40,10 +40,6 @@ namespace gheith {
         }
     }
 
-    void schedule(TCB* tcb){
-        schedule(tcb,Source::MANUAL);
-    }
-
     void schedule(TCB* tcb, Source source) {
         if (!tcb->isIdle) {
 	        scheduler->schedule(tcb,source);
@@ -83,13 +79,6 @@ namespace gheith {
             });
         }
     } reaper;
-
-    void yield(Source source){
-        using namespace gheith;
-        block(BlockOption::CanReturn,[source](TCB* me) {
-            schedule(me,source);
-        });
-    }
 };
 
 void threadsInit() {
@@ -107,8 +96,11 @@ void threadsInit() {
     reaper.init();
 }
 
-void yield() {
-    gheith::yield(Source::MANUAL);
+void yield(Source source) {
+    using namespace gheith;
+    block(BlockOption::CanReturn,[source](TCB* me) {
+        schedule(me,source);
+    });
 }
 
 void stop() {
