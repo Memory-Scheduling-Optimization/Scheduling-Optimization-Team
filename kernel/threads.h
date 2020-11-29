@@ -87,7 +87,7 @@ namespace gheith {
         activeThreads[core_id] = next_tcb;  // Why is this safe?
         setCR3(next_tcb->pcb->cr3);
         tss[core_id].esp0 = next_tcb->pcb->esp0;
-
+      
         gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void*)caller<F>,(void*)&f);
 
         me->saveArea.no_preempt = before;
