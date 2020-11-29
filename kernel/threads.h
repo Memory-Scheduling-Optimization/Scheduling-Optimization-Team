@@ -12,52 +12,12 @@
 
 #include "tss.h"
 #include "pcb.h"
+#include "tcb.h"
 
 namespace gheith {
 
     constexpr static int STACK_BYTES = 8 * 1024;
     constexpr static int STACK_WORDS = STACK_BYTES / sizeof(uint32_t);
-
-    struct TCB;
-
-    struct SaveArea {
-        uint32_t ebx;
-        uint32_t esp;
-        uint32_t ebp;
-        uint32_t esi;
-        uint32_t edi;
-	uint32_t cr2;
-        volatile uint32_t no_preempt;
-        TCB* tcb;
-    };
-    
-    struct TCB {
-        static Atomic<uint32_t> next_id;
-	
-        const bool isIdle;
-        const uint32_t id;
-
-        TCB* next;
-        SaveArea saveArea;
-	Shared<PCB> pcb;
-	
-        TCB(bool isIdle) :
-	    isIdle(isIdle),
-	    id(next_id.fetch_add(1)) {
-            saveArea.tcb = this;
-        }
-
-	TCB(Shared<PCB> pcb, bool isIdle) :
-	    isIdle(isIdle),
-	    id(next_id.fetch_add(1)),
-	    pcb(pcb) {
-	    saveArea.tcb = this;
-	}
-
-        virtual ~TCB() {}
-
-        virtual void doYourThing() = 0;
-    };
 
     extern "C" void gheith_contextSwitch(gheith::SaveArea *, gheith::SaveArea *, void* action, void* arg);
 
@@ -65,10 +25,10 @@ namespace gheith {
     extern TCB** idleThreads;
 
     extern TCB* current();
-    //extern Queue<TCB,InterruptSafeLock> readyQ;
-    extern Scheduler<TCB> scheduler;
+    extern Scheduler* scheduler;
     extern void entry();
     extern void schedule(TCB*);
+    void schedule(TCB*,Source);
     extern void delete_zombies();
 
     template <typename F>
@@ -95,50 +55,48 @@ namespace gheith {
 
         uint32_t core_id;
         TCB* me;
+        bool before;
 
-        Interrupts::protect([&core_id,&me] {
+        Interrupts::protect([&core_id,&me,&before] {
             core_id = SMP::me();
             me = activeThreads[core_id];
-            me->saveArea.no_preempt = 1;
+            before = me->saveArea.no_preempt;
+            me->saveArea.no_preempt = true;
         });
         
     again:
-        //readyQ.monitor_add();
-	scheduler.monitor_add();
-        //auto next_tcb = readyQ.remove();
-	auto next_tcb = scheduler.getNext();
+	    auto next_tcb = scheduler->getNext();
         if (next_tcb == nullptr) {
             if (blockOption == BlockOption::CanReturn) {
-		me->saveArea.no_preempt = 0;
-		asm volatile ("pause");
-		return;
-	    }
+                me->saveArea.no_preempt = before;
+                return;
+            }
             if (me->isIdle) {
                 // Many students had problems with hopping idle threads
                 ASSERT(core_id == SMP::me());
                 ASSERT(!Interrupts::isDisabled());
                 ASSERT(me == idleThreads[core_id]);
                 ASSERT(me == activeThreads[core_id]);
-                iAmStuckInALoop(true);
+                iAmStuckInALoop(false);
                 goto again;
             }
-            next_tcb = idleThreads[core_id];    
+            next_tcb = idleThreads[core_id];
         }
 
-        next_tcb->saveArea.no_preempt = 1;
+        next_tcb->saveArea.no_preempt = true;
 
         activeThreads[core_id] = next_tcb;  // Why is this safe?
 
-	{
 	    uint32_t old_cr3 = getCR3();
 	    uint32_t new_cr3 = next_tcb->pcb->cr3;
-	    if (old_cr3 != new_cr3)
-		setCR3(new_cr3);
+	    if (old_cr3 != new_cr3){
+		    setCR3(new_cr3);
+        }
 	    tss[core_id].esp0 = next_tcb->pcb->esp0;
-	    
-	}
-	
-        gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void *)caller<F>,(void*)&f);
+
+        gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void*)caller<F>,(void*)&f);
+
+        me->saveArea.no_preempt = before;
     }
 
     struct TCBWithStack : public TCB {
@@ -151,13 +109,13 @@ namespace gheith {
             saveArea.esp = (uint32_t) &stack[STACK_WORDS-2];
         }
 
-	TCBWithStack(Shared<PCB> pcb) : TCB(pcb, false) {
-	    stack[STACK_WORDS - 2] = 0x200;  // EFLAGS: IF
-            stack[STACK_WORDS - 1] = (uint32_t) entry;
-	        saveArea.no_preempt = 0;
-            saveArea.esp = (uint32_t) &stack[STACK_WORDS-2];
-	    pcb->esp0 = saveArea.esp;
-	}
+        TCBWithStack(Shared<PCB> pcb) : TCB(pcb, false) {
+            stack[STACK_WORDS - 2] = 0x200;  // EFLAGS: IF
+                stack[STACK_WORDS - 1] = (uint32_t) entry;
+                saveArea.no_preempt = 0;
+                saveArea.esp = (uint32_t) &stack[STACK_WORDS-2];
+            pcb->esp0 = saveArea.esp;
+        }
 	
         ~TCBWithStack() {
             if (stack) {
@@ -174,7 +132,7 @@ namespace gheith {
 
         TCBImpl(T work) : TCBWithStack(), work(work) {}
 	
-	TCBImpl(Shared<PCB> pcb, T work) : TCBWithStack(pcb), work(work) {}
+	    TCBImpl(Shared<PCB> pcb, T work) : TCBWithStack(pcb), work(work) {}
 	
         ~TCBImpl() {}
 
@@ -183,6 +141,7 @@ namespace gheith {
         }
     };
 
+    extern void yield(Source source);
     
 };
 

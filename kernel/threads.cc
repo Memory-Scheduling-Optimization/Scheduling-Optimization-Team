@@ -3,10 +3,10 @@
 #include "debug.h"
 #include "config.h"
 #include "machine.h"
-
 #include "threads.h"
 #include "condition.h"
 
+#include "impls.h"
 
 namespace gheith {
     Atomic<uint32_t> TCB::next_id{0};
@@ -17,7 +17,7 @@ namespace gheith {
     //Queue<TCB,InterruptSafeLock> readyQ{};
     Queue<TCB,InterruptSafeLock> zombies{};
 
-    Scheduler<TCB> scheduler{};
+    Scheduler* scheduler = new FSFS{};
 
     TCB* current() {
         auto was = Interrupts::disable();
@@ -40,10 +40,13 @@ namespace gheith {
         }
     }
 
-    void schedule(TCB* tcb) {
+    void schedule(TCB* tcb){
+        schedule(tcb,Source::MANUAL);
+    }
+
+    void schedule(TCB* tcb, Source source) {
         if (!tcb->isIdle) {
-            //readyQ.add(tcb);
-	    scheduler.schedule(tcb, 0);
+	        scheduler->schedule(tcb,source);
         }
     }
 
@@ -55,31 +58,38 @@ namespace gheith {
     };
 
     static class {
-	InterruptSafeLock mutex{};
-	Condition cv{mutex};
+        InterruptSafeLock mutex{};
+        Condition cv{mutex};
     public:	
-	void put(TCB* tcb) {
-	    LockGuard g{mutex};
-	    zombies.add(tcb);
-	    cv.notifyOne();
-	}
-	void init() {
-	    new (&mutex) InterruptSafeLock{};
-	    new (&cv) Condition{mutex};
-	    thread([this] {
-		       Debug::printf("starting reaper\n");
-		       TCB* tcb;
-		       while (true) {
-			   {
-			       LockGuard g{mutex};
-			       while (!(tcb = zombies.remove()))
-				   cv.wait();	    
-			   }
-			   delete tcb;
-		       }
-		   });
-	}	
+        void put(TCB* tcb) {
+            LockGuard g{mutex};
+            zombies.add(tcb);
+            cv.notifyOne();
+        }
+        void init() {
+            new (&mutex) InterruptSafeLock{};
+            new (&cv) Condition{mutex};
+            thread([this] {
+                Debug::printf("starting reaper\n");
+                TCB* tcb;
+                while (true) {
+                {
+                    LockGuard g{mutex};
+                    while (!(tcb = zombies.remove()))
+                    cv.wait();	    
+                }
+                delete tcb;
+                }
+            });
+        }
     } reaper;
+
+    void yield(Source source){
+        using namespace gheith;
+        block(BlockOption::CanReturn,[source](TCB* me) {
+            schedule(me,source);
+        });
+    }
 };
 
 void threadsInit() {
@@ -98,10 +108,7 @@ void threadsInit() {
 }
 
 void yield() {
-    using namespace gheith;
-    block(BlockOption::CanReturn,[](TCB* me) {
-        schedule(me);
-    });
+    gheith::yield(Source::MANUAL);
 }
 
 void stop() {
@@ -110,7 +117,7 @@ void stop() {
     while(true) {
         block(BlockOption::MustBlock,[](TCB* me) {
             if (!me->isIdle) {
-		reaper.put(me);
+		        reaper.put(me);
             }
         });
         ASSERT(current()->isIdle);
