@@ -62,6 +62,10 @@ public:
         }
         return nullptr;
     }
+    
+    bool isEmpty() {
+        return false;
+    }
 };
 
 #endif
