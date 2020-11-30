@@ -30,7 +30,7 @@ void kernelMain(void) {
 	auto fs = Shared<Ext2>::make(ide);	
 	auto init = fs->open(fs->root, initName);
 	auto pcb = Shared<PCB>{new Process(fs)};
-	thread(pcb, [=]() mutable { SYS::exec(init, "init", 0); });
+	thread([=]() mutable { SYS::exec(init, "init", 0); },pcb);
     }
     // Debug::printf("init exited with status %d\n",
     // 		  pcb->process()->exit_status->get());

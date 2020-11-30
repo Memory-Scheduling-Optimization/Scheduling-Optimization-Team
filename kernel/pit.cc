@@ -145,5 +145,5 @@ extern "C" void apitHandler(uint32_t* things) {
     SMP::eoi_reg.set(0);
     auto me = gheith::activeThreads[id];
     if ((me == nullptr) || (me->isIdle) || (me->saveArea.no_preempt)) return;
-    gheith::yield(Source::PREEMPT);
+    yield(Source::PREEMPT);
 }

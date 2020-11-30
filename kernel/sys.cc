@@ -100,7 +100,7 @@ namespace SYS {
 			 auto p = pcb->process()->clone();
 			 uint32_t pc = stack[0];
 			 uint32_t esp = stack[3];
-			 thread(p, [=] { switchToUser(pc, esp, 0); });
+			 thread([=] { switchToUser(pc, esp, 0); },p);
 			 return Shared<PD>{
 			     new ProcessDescriptor{p->process()->exit_status}};
 		     });
