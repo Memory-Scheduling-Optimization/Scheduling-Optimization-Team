@@ -9,6 +9,7 @@
 #include "tcb.h"
 
 enum class Source {
+    INIT,
     PREEMPT,
     MANUAL
 };
@@ -26,6 +27,8 @@ struct Scheduler{
     virtual bool schedule(gheith::TCB* thread, Source source) = 0;
 
     virtual gheith::TCB* getNext() = 0;
+
+    virtual bool isEmpty() = 0;
     
 };
 

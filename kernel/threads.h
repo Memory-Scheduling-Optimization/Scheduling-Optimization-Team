@@ -27,8 +27,7 @@ namespace gheith {
     extern TCB* current();
     extern Scheduler* scheduler;
     extern void entry();
-    extern void schedule(TCB*);
-    void schedule(TCB*,Source);
+    extern void schedule(TCB*,Source=Source::MANUAL);
     extern void delete_zombies();
 
     template <typename F>
@@ -140,38 +139,22 @@ namespace gheith {
             work();
         }
     };
-
-    extern void yield(Source source);
     
 };
 
 extern void threadsInit();
 
 extern void stop();
-extern void yield();
-
-
-template <typename T>
-void thread(T work) {
-    using namespace gheith;
-
-    delete_zombies();
-    
-    auto tcb = new TCBImpl<T>(kProc, work);
-    schedule(tcb);
-}
+extern void yield(Source=Source::MANUAL);
 
 template <typename T>
-void thread(Shared<PCB> pcb, T work) {
+void thread(T work, Shared<PCB> pcb=kProc) {
     using namespace gheith;
 
     delete_zombies();
 
     auto tcb = new TCBImpl<T>(pcb, work);
-    schedule(tcb);
+    schedule(tcb,Source::INIT);
 }
-
-
-
 
 #endif

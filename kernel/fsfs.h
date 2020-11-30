@@ -20,6 +20,10 @@ public:
     gheith::TCB* getNext(){
 	    return readyQ.remove();
     }
+
+    bool isEmpty(){
+        return readyQ.isEmpty();
+    }
 };
 
 #endif

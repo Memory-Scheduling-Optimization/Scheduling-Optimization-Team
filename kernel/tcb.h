@@ -27,6 +27,7 @@ namespace gheith {
         SaveArea saveArea;
         Shared<PCB> pcb;
         uint32_t scrap;
+        int scrap2;
 
         TCB(bool isIdle) : isIdle(isIdle), id(next_id.fetch_add(1)) {
             saveArea.tcb = this;
