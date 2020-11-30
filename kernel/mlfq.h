@@ -3,35 +3,43 @@
 
 #include "mlq.h"
 
+struct MLFQScrap {
+    uint32_t priority;
+    int progress;
+};
+
 template<typename F>
 class MLFQ : public MLQ<F> {
 
     uint32_t getScheduler(gheith::TCB* thread, Source source) {
-        uint32_t& scrap = thread->scrap;
-        int& scrap2 = thread->scrap2;
+        MLFQScrap* scrap = (MLFQScrap*)thread->scrap;
         uint32_t levels = MLQ<F>::levels;
         constexpr int s2Up = 3;
         constexpr int s2Down = -3;
         switch(source){
             case Source::INIT:
-                scrap = levels/2;
-                scrap2 = 0;
+                scrap = new MLFQScrap{};
+                scrap->priority = levels/2;
+                scrap->progress = 0;
+                thread->scrap = scrap;
                 break;
             case Source::MANUAL:
-                scrap2 = (scrap2>s2Down)?scrap2-1:scrap2;
+                scrap->progress = (scrap->progress>s2Down)?scrap->progress-1:scrap->progress;
                 break;
             case Source::PREEMPT:
-                scrap2 = (scrap2<s2Up)?scrap2+1:scrap2;
+                scrap->progress = (scrap->progress<s2Up)?scrap->progress+1:scrap->progress;
                 break;
         }
-        if(scrap > 0 && scrap2 == s2Down){
-            scrap--;
-            scrap2 = 0;
-        }else if(scrap < levels-1 && scrap2 == s2Up){
-            scrap++;
-            scrap2 = 0;
+        uint32_t& priority = scrap->priority;
+        int& progress = scrap->progress;
+        if(priority > 0 && progress == s2Down){
+            priority--;
+            progress = 0;
+        }else if(priority < levels-1 && progress == s2Up){
+            priority++;
+            progress = 0;
         }
-        return scrap;
+        return priority;
     }
 
 public:

@@ -33,7 +33,7 @@ public:
     }
 
     bool schedule(gheith::TCB* thread, Source source) {
-	    LockGuard g{lock};
+        LockGuard g{lock};
         uint32_t level = getScheduler(thread,source);
         toRemove = K::min(toRemove,level);
         return schRay[level]->schedule(thread,source);
@@ -41,7 +41,7 @@ public:
 
     gheith::TCB* getNext(){
         LockGuard g{lock};
-	    if(toRemove==levels){
+        if(toRemove==levels){
             return nullptr;
         }
         gheith::TCB* next = schRay[toRemove]->getNext();

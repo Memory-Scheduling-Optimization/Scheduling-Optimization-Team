@@ -41,7 +41,7 @@ namespace gheith {
 
     void schedule(TCB* tcb, Source source) {
         if (!tcb->isIdle) {
-	        scheduler->schedule(tcb,source);
+            scheduler->schedule(tcb,source);
         }
     }
 
@@ -55,7 +55,7 @@ namespace gheith {
     static class {
         InterruptSafeLock mutex{};
         Condition cv{mutex};
-    public:	
+    public:    
         void put(TCB* tcb) {
             LockGuard g{mutex};
             zombies.add(tcb);
@@ -71,7 +71,7 @@ namespace gheith {
                 {
                     LockGuard g{mutex};
                     while (!(tcb = zombies.remove()))
-                    cv.wait();	    
+                    cv.wait();        
                 }
                 delete tcb;
                 }
@@ -110,7 +110,7 @@ void stop() {
     while(true) {
         block(BlockOption::MustBlock,[](TCB* me) {
             if (!me->isIdle) {
-		        reaper.put(me);
+                reaper.put(me);
             }
         });
         ASSERT(current()->isIdle);

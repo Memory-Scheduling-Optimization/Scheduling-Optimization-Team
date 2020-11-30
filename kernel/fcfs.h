@@ -13,12 +13,12 @@ public:
     ~FCFS() {}
 
     bool schedule(gheith::TCB* thread, Source source) {
-	    readyQ.add(thread);
-	    return true;
+        readyQ.add(thread);
+        return true;
     }
 
     gheith::TCB* getNext(){
-	    return readyQ.remove();
+        return readyQ.remove();
     }
 
     bool isEmpty(){
