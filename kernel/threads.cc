@@ -14,7 +14,6 @@ namespace gheith {
     TCB** activeThreads;
     TCB** idleThreads;
 
-    //Queue<TCB,InterruptSafeLock> readyQ{};
     Queue<TCB,InterruptSafeLock> zombies{};
 
     Scheduler* scheduler = new MLQ{
