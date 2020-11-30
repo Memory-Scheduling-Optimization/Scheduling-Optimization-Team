@@ -159,7 +159,7 @@ void thread(T work) {
     delete_zombies();
     
     auto tcb = new TCBImpl<T>(kProc, work);
-    schedule(tcb);
+    schedule(tcb, Source::INIT);
 }
 
 template <typename T>
@@ -169,7 +169,7 @@ void thread(Shared<PCB> pcb, T work) {
     delete_zombies();
 
     auto tcb = new TCBImpl<T>(pcb, work);
-    schedule(tcb);
+    schedule(tcb, Source::INIT);
 }
 
 

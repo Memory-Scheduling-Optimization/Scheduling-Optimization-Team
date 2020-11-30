@@ -17,7 +17,7 @@ namespace gheith {
     //Queue<TCB,InterruptSafeLock> readyQ{};
     Queue<TCB,InterruptSafeLock> zombies{};
 
-    Scheduler* scheduler = new FSFS{};
+    Scheduler* scheduler = new HardAffinityScheduler{};
 
     TCB* current() {
         auto was = Interrupts::disable();
