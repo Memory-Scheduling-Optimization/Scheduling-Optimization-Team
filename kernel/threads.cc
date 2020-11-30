@@ -15,7 +15,6 @@ namespace gheith {
     TCB** idleThreads;
 
     Queue<TCB,InterruptSafeLock> zombies{};
-
     Scheduler* scheduler = new FCFS{};
 
     TCB* current() {
@@ -79,7 +78,6 @@ namespace gheith {
         }
     } reaper;
 
-    
 };
 
 void threadsInit() {

@@ -23,13 +23,12 @@ struct Scheduler{
     virtual ~Scheduler() {
 
     }
-
+  
     virtual bool schedule(gheith::TCB*,Source) = 0;
 
     virtual gheith::TCB* getNext() = 0;
 
     virtual bool isEmpty() = 0;
-    
 };
 
 #endif
