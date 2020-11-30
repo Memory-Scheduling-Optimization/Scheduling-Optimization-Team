@@ -20,6 +20,11 @@ public:
         monitor((uintptr_t)&first);
     }
 
+    bool isEmpty(){
+        LockGuard g{lock};
+        return first == nullptr;
+    }
+
     void add(T* t) {
         LockGuard g{lock};
         t->next = nullptr;

@@ -27,8 +27,7 @@ namespace gheith {
     extern TCB* current();
     extern Scheduler* scheduler;
     extern void entry();
-    extern void schedule(TCB*);
-    void schedule(TCB*,Source);
+    extern void schedule(TCB*,Source=Source::MANUAL);
     extern void delete_zombies();
 
     template <typename F>
@@ -87,11 +86,7 @@ namespace gheith {
 
         activeThreads[core_id] = next_tcb;  // Why is this safe?
 
-	    uint32_t old_cr3 = getCR3();
-	    uint32_t new_cr3 = next_tcb->pcb->cr3;
-	    if (old_cr3 != new_cr3){
-		    setCR3(new_cr3);
-        }
+	    setCR3(next_tcb->pcb->cr3);
 	    tss[core_id].esp0 = next_tcb->pcb->esp0;
 
         gheith_contextSwitch(&me->saveArea,&next_tcb->saveArea,(void*)caller<F>,(void*)&f);
@@ -140,38 +135,22 @@ namespace gheith {
             work();
         }
     };
-
-    extern void yield(Source source);
     
 };
 
 extern void threadsInit();
 
 extern void stop();
-extern void yield();
-
-
-template <typename T>
-void thread(T work) {
-    using namespace gheith;
-
-    delete_zombies();
-    
-    auto tcb = new TCBImpl<T>(kProc, work);
-    schedule(tcb);
-}
+extern void yield(Source=Source::MANUAL);
 
 template <typename T>
-void thread(Shared<PCB> pcb, T work) {
+void thread(T work, Shared<PCB> pcb=kProc) {
     using namespace gheith;
 
     delete_zombies();
 
     auto tcb = new TCBImpl<T>(pcb, work);
-    schedule(tcb);
+    schedule(tcb,Source::INIT);
 }
-
-
-
 
 #endif
