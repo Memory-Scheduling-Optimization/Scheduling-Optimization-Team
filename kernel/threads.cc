@@ -14,10 +14,8 @@ namespace gheith {
     TCB** activeThreads;
     TCB** idleThreads;
 
-    //Queue<TCB,InterruptSafeLock> readyQ{};
     Queue<TCB,InterruptSafeLock> zombies{};
-
-    Scheduler* scheduler = new FSFS{};
+    Scheduler* scheduler = new FCFS{};
 
     TCB* current() {
         auto was = Interrupts::disable();
@@ -38,10 +36,6 @@ namespace gheith {
             if (it == nullptr) return;
             delete it;
         }
-    }
-
-    void schedule(TCB* tcb){
-        schedule(tcb,Source::MANUAL);
     }
 
     void schedule(TCB* tcb, Source source) {
@@ -84,12 +78,6 @@ namespace gheith {
         }
     } reaper;
 
-    void yield(Source source){
-        using namespace gheith;
-        block(BlockOption::CanReturn,[source](TCB* me) {
-            schedule(me,source);
-        });
-    }
 };
 
 void threadsInit() {
@@ -107,8 +95,11 @@ void threadsInit() {
     reaper.init();
 }
 
-void yield() {
-    gheith::yield(Source::MANUAL);
+void yield(Source source){
+    using namespace gheith;
+    block(BlockOption::CanReturn,[source](TCB* me) {
+        schedule(me,source);
+    });
 }
 
 void stop() {
