@@ -45,6 +45,10 @@ public:
         gheith::TCB* next = queues[core]->remove();
         return next;
     }
+    
+    bool isEmpty() {
+        return false;
+    }
 };
 
 #endif
