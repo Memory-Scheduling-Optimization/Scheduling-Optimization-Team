@@ -16,38 +16,7 @@ namespace gheith {
 
     Queue<TCB,InterruptSafeLock> zombies{};
 
-    Scheduler* scheduler = new MLQ{
-        11,
-        [](uint32_t i){
-            return new FSFS{};
-        },
-        [](TCB* tcb, Source source, uint32_t levels){
-            uint32_t& scrap = tcb->scrap;
-            int& scrap2 = tcb->scrap2;
-            constexpr int s2Up = 3;
-            constexpr int s2Down = -3;
-            switch(source){
-                case Source::INIT:
-                    scrap = levels/2;
-                    scrap2 = 0;
-                    break;
-                case Source::MANUAL:
-                    scrap2 = (scrap2>s2Down)?scrap2-1:scrap2;
-                    break;
-                case Source::PREEMPT:
-                    scrap2 = (scrap2<s2Up)?scrap2+1:scrap2;
-                    break;
-            }
-            if(scrap > 0 && scrap2 == s2Down){
-                scrap--;
-                scrap2 = 0;
-            }else if(scrap < levels-1 && scrap2 == s2Up){
-                scrap++;
-                scrap2 = 0;
-            }
-            return scrap;
-        }
-    };
+    Scheduler* scheduler = new FSFS{};
 
     TCB* current() {
         auto was = Interrupts::disable();
