@@ -5,18 +5,20 @@
 #include "atomic.h"
 #include "libk.h"
 
-template<typename X, typename Y>
+template<typename F>
 class MLQ : public Scheduler {
 
-    const uint32_t levels;
     Scheduler** schRay;
-    Y getScheduler;
     uint32_t toRemove;
     InterruptSafeLock lock;
 
+    virtual uint32_t getScheduler(gheith::TCB*,Source) = 0;
+
 public:
+
+    const uint32_t levels;
     
-    MLQ(uint32_t levels, X mapper, Y getScheduler) : levels(levels), getScheduler(getScheduler), toRemove(levels) {
+    MLQ(uint32_t levels, F mapper) : toRemove(levels), levels(levels) {
         schRay = new Scheduler*[levels];
         for(uint32_t i = 0; i<levels; i++){
             schRay[i] = mapper(i);
@@ -32,7 +34,7 @@ public:
 
     bool schedule(gheith::TCB* thread, Source source) {
 	    LockGuard g{lock};
-        uint32_t level = getScheduler(thread,source,levels);
+        uint32_t level = getScheduler(thread,source);
         toRemove = K::min(toRemove,level);
         return schRay[level]->schedule(thread,source);
     }
