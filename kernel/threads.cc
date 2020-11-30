@@ -31,17 +31,19 @@ namespace gheith {
                     scrap = levels/2;
                     scrap2 = 0;
                     break;
-                case Source::PREEMPT:
-                    scrap2 = (scrap2<s2Up)?scrap2+1:scrap2;
-                    break;
                 case Source::MANUAL:
                     scrap2 = (scrap2>s2Down)?scrap2-1:scrap2;
+                    break;
+                case Source::PREEMPT:
+                    scrap2 = (scrap2<s2Up)?scrap2+1:scrap2;
                     break;
             }
             if(scrap > 0 && scrap2 == s2Down){
                 scrap--;
+                scrap2 = 0;
             }else if(scrap < levels-1 && scrap2 == s2Up){
                 scrap++;
+                scrap2 = 0;
             }
             return scrap;
         }
