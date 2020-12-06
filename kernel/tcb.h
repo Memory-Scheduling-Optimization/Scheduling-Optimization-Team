@@ -27,6 +27,7 @@ namespace gheith {
         SaveArea saveArea;
         Shared<PCB> pcb;
         void* scrap = nullptr;
+        uint32_t core;
 
         TCB(bool isIdle) : isIdle(isIdle), id(next_id.fetch_add(1)) {
             saveArea.tcb = this;
@@ -36,7 +37,11 @@ namespace gheith {
             saveArea.tcb = this;
         }
 
-        virtual ~TCB() {}
+        virtual ~TCB() {
+            if(scrap != nullptr){
+                free(scrap);
+            }
+        }
 
         virtual void doYourThing() = 0;
     };
