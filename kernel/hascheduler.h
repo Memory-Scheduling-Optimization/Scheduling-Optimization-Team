@@ -29,11 +29,12 @@ public:
         if (source == Source::INIT) {
             // this is a new thread, put it on the next scheduled core
             core = scheduleCore;
+            thread->core = scheduleCore;
             // advance to next core
             scheduleCore = (scheduleCore + 1) % kConfig.totalProcs;
         } else {
             // this is not a new thread, keep running on the same core
-            core = SMP::me();
+            core = thread->core;
         }
         queues[core]->add(thread);
         return true;
