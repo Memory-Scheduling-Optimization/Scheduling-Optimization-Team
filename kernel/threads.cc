@@ -15,12 +15,7 @@ namespace gheith {
     TCB** idleThreads;
 
     Queue<TCB,InterruptSafeLock> zombies{};
-<<<<<<< HEAD
-
-    Scheduler* scheduler = new SoftAffinityScheduler{};
-=======
     Scheduler* scheduler = new FCFS{};
->>>>>>> 415913eb64aeac693206a87603880169db59649b
 
     TCB* current() {
         auto was = Interrupts::disable();
